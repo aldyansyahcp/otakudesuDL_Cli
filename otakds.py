@@ -84,7 +84,7 @@ def main():
             for n,i in enumerate(lili,1):
                 rr[n]=i
                 print("\t",+n,i.find("strong").string)
-        pil = int(input("\tpil: \n"))
+        pil = int(input("\tpil: "))
         res = [i for i in rr[pil].find_all("a", attrs={"data-wpel-link":"external"})]
         lin = requests.get(res[0]["href"])
         bes = bs(lin.text,"html.parser")
