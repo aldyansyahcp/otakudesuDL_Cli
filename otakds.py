@@ -80,11 +80,12 @@ def main():
         if "-episode-" in eps[pi] or "special" in eps[pi] or "-sp-" in eps[pi] or "ova" in eps[pi]:
             rek = bs(requests.get(eps[pi], headers=header).text, "html.parser").find("div","download")
             lili = rek.find_all("li")
+            print("\n\tPilih resolusinya: ")
             for n,i in enumerate(lili,1):
                 rr[n]=i
-                #print(n,i.find("strong").string)
-        #pil = int(input("pil: "))
-        res = [i for i in rr[4].find_all("a", attrs={"data-wpel-link":"external"})]
+                print("\t"+n,i.find("strong").string)
+        pil = int(input("\tpil: \n"))
+        res = [i for i in rr[pil].find_all("a", attrs={"data-wpel-link":"external"})]
         lin = requests.get(res[0]["href"])
         bes = bs(lin.text,"html.parser")
         #.find("meta",attrs={"property":"og:url"})["content"].strip("/")
