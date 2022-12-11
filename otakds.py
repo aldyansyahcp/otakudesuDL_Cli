@@ -85,6 +85,7 @@ def main():
                 rr[n]=i
                 print("\t",+n,i.find("strong").string)
         pil = int(input("\tpil: "))
+        os.system("clear")
         res = [i for i in rr[pil].find_all("a", attrs={"data-wpel-link":"external"})]
         lin = requests.get(res[0]["href"])
         bes = bs(lin.text,"html.parser")
@@ -97,7 +98,7 @@ def main():
         urldl = f"https://{origin}{elemen.group(1)}{eval(elemen.group(2))}{elemen.group(3)}"
         print(urldl)
         name = urldl.split("/")
-        reks = requests.get(urldl,stream=True)
+        reks = requests.get(urldl,stream=True);print(reks)
         if os.path.exists("/sdcard/Download/video/"):
             with open(f"/sdcard/Download/video/{name[len(name)-1]}","wb") as fd:
                 for chunk in reks.iter_content(chunk_size=1024*1024):
