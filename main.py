@@ -46,6 +46,8 @@ def ongoing():
 def milih():
     bs = pencarian()
     global resultpil
+    global result_judul
+    global resdulu
     name = bs.find("li", attrs={"style":"list-style:none;"})
     print("="*60)
     print("\n\t\t     ________________ \n\t\t    | Dipilih ya ajg |\n\t\t     ````````````````")
@@ -60,6 +62,7 @@ def milih():
             result_link.append(i.find("a")["href"])
     [print(n,i) for n,i in enumerate(result_judul,1)]
     pilih = int(input("Pilih Nomerr brp: "))-1
+    resdulu = result_judul[pilih]
     resultpil = result_link[pilih]
     pilb = input("\n1. pereps\n2. batch? \n1/2: ")
     #pilb = "1"
@@ -85,8 +88,10 @@ def pereps(url):
         resul.reverse(); resl.reverse()
         os.system("clear")
         [print(n,i) for n,i in enumerate(resl,1)]
-        if rek.find("div","sinopc").find("p").string is not None:
-            print("\n",rek.find("div","sinopc").find("p").string,"\n")
+        if rek.find("div","sinopc").find("p") is not None:
+            print("\n",rek.find("div","sinopc").find("p").text,"\n")
+        else:
+            pass
         eps = resul
         rr = {}
         #try:
@@ -167,9 +172,10 @@ def main():
                     print(n,i.find("strong").string)"""
         #eps[pi] sama request.get(eps[pi]) diganti eps[i]
         if "-episode-" in eps[i] or "special" in eps[i] or "-sp-" in eps[i] or "ova" in eps[i]:
-            rek = bs(requests.get(eps[i], headers=header).text, "html.parser").find("div","download")
-            lili = rek.find_all("li")
-            print(eps[i])
+            rek = bs(requests.get(eps[i], headers=header).text, "html.parser")
+            names = rek.find("h1","posttl").text[:10]
+            dlp = rek.find("div","download")
+            lili = dlp.find_all("li")
             #print("\n\tPilih resolusinya: ")
             for n,d in enumerate(lili,1):
                 rr[n]=d
@@ -189,10 +195,11 @@ def main():
         elemen = re.search('document.getElementById\(\'dlbutton\'\).href = \"(.*?)\" \+ \((.*?)\) \+ \"(.*?)\";',lin.text)
         print("Please wait file downloading...\nFile size",bes.findAll("font",attrs={"style":"line-height:18px; font-size: 13px;"})[0].string)
         urldl = f"https://{origin}{elemen.group(1)}{eval(elemen.group(2))}{elemen.group(3)}"
-        print(urldl)
+        print(urldl,"\nKecepatan download tergantung jaringanmu")
         name = urldl.split("/")
         r = requests.get(urldl,stream=True)
-        folder = os.path.join("/sdcard/Download/video",name[-1][:18])
+        print(name[1])
+        folder = os.path.join("/sdcard/Download/video",resdulu)
         file = os.path.join(folder,name[-1])
         if not os.path.exists(folder):
             os.makedirs(folder)
