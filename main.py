@@ -1,3 +1,5 @@
+from tqdm import tqdm
+import traceback
 import requests, time
 from bs4 import BeautifulSoup as bs
 import csv, os, time, re
@@ -14,7 +16,7 @@ red= "\033[31;1m"
 def pencarian():
     cari = input("\n\tMau cari anime apa: ")
     try: 
-        url = "https://otakudesu.bid/?s={}&post_type=anime".format(cari)
+        url = "https://otakudesu.ltd/?s={}&post_type=anime".format(cari)
         req = requests.get(url, headers=header)
         bes = bs(req.text, "html.parser")
     except IndexError:
@@ -24,7 +26,7 @@ def pencarian():
     return bes
 
 def ongoing():
-        url = ["https://otakudesu.bid/ongoing-anime","https://otakudesu.bid/ongoing-anime/page/2","https://otakudesu.bid/ongoing-anime/page/3"]
+        url = ["https://otakudesu.ltd/ongoing-anime","https://otakudesu.ltd/ongoing-anime/page/2","https://otakudesu.ltd/ongoing-anime/page/3"]
         res = [bs(requests.get(i,headers=header).text,'html.parser') for i in url]
         reslin = {}
         resld=[]
@@ -42,6 +44,8 @@ def ongoing():
             pereps(resld[int(pil)-1])
         elif pier == "2":
             execute(resld[int(pil)-1])
+        else:
+            ongoing()
         
 def milih():
     bs = pencarian()
@@ -63,16 +67,17 @@ def milih():
     [print(n,i) for n,i in enumerate(result_judul,1)]
     pilih = int(input("Pilih Nomerr brp: "))-1
     resdulu = result_judul[pilih]
+    print(resdulu)
     resultpil = result_link[pilih]
     pilb = input("\n1. pereps\n2. batch? \n1/2: ")
     #pilb = "1"
-    print(resultpil)
     if pilb == "1":
         pereps(resultpil)
     elif pilb == "2":
         execute(resultpil)
     else:
         print("your input out of average")
+        pencarian()
 
 global resul
 resul = []
@@ -129,6 +134,8 @@ def pereps(url):
 def execute(url):
     #link = milih()
     resl = []
+    global resdulu
+    resdulu = bs(requests.get(url).text,"html.parser").find("span", "monktit").text
     try:
         #pilih = int(input("Pilih Nomooor brp: "))-1
         os.system("clear")
@@ -136,7 +143,6 @@ def execute(url):
         print("\n\t\t     ________________ \n\t\t    | Dipilih ya ajg |\n\t\t     ````````````````")
         rek = requests.get(url, headers=header)
         soup = bs(rek.text, "html.parser")
-        print(url)
         for i in  soup.find_all("a",attrs={"target":"_blank"}):
             lin = i["href"]
             if "-episode-" in lin or "-sp" in lin or "-spesial-" in lin:
@@ -193,7 +199,8 @@ def main():
         #print(bes.find("meta",attrs={"property":"og:url"})["content"].strip("/"))
         #origin = bs(lin.text,"html.parser").findAll("div","video-share")[0].find("input",attrs={"readonly":"readonly"})["value"]
         elemen = re.search('document.getElementById\(\'dlbutton\'\).href = \"(.*?)\" \+ \((.*?)\) \+ \"(.*?)\";',lin.text)
-        print("Please wait file downloading...\nFile size",bes.findAll("font",attrs={"style":"line-height:18px; font-size: 13px;"})[0].string)
+        sizes = bes.findAll("font",attrs={"style":"line-height:18px; font-size: 13px;"})[0].string
+        print("Please wait file downloading...\nFile size",sizes)
         urldl = f"https://{origin}{elemen.group(1)}{eval(elemen.group(2))}{elemen.group(3)}"
         print(urldl,"\nKecepatan download tergantung jaringanmu")
         name = urldl.split("/")
@@ -204,13 +211,14 @@ def main():
         if not os.path.exists(folder):
             os.makedirs(folder)
             fd = open(file,"wb")
-            [fd.write(chunk) for chunk in r.iter_content(chunk_size=1024*1024) if chunk]
+            [fd.write(chunk) for chunk in tqdm(r.iter_content(chunk_size=1024*1024)) if chunk]
             fd.close()
         else:
             if not os.path.exists(file):
-                fd = open(file,"wb")
-                [fd.write(chunk) for chunk in r.iter_content(chunk_size=1024*1024) if chunk]
-                fd.close()
+                #if os.path.getsize(file) == int(sizes):
+                    fd = open(file,"wb")
+                    [fd.write(chunk) for chunk in r.iter_content(chunk_size=1024*1024) if chunk]
+                    fd.close()
             else:
                 print("file is exists ",file,"\ncontinueing download")
                 time.sleep(2)
@@ -223,28 +231,33 @@ def main():
 
 def batcher():
     try:
-        url = [bs(requests.get(f"https://otakudesu.bid/complete-anime/page/{i}/").text,"html.parser") for i in range(1,6)]
-        n=1; reslink = []
+        url = [bs(requests.get(f"https://otakudesu.ltd/complete-anime/page/{i}/").text,"html.parser") for i in range(1,6)]
+        n=1; reslink = []; resdul = []
+        global resdulu
         for i in url:
             for x,y in zip(i.findAll("div","thumb"), i.findAll("img","attachment-thumb size-thumb wp-post-image")):
                 reslink.append(x.find("a",attrs={"data-wpel-link":"internal"})["href"])
+                resdul.append(y["alt"])
                 print(n,y["alt"]); n+=1
         pil = input("Pilih nomor: ")
         pilb = input("\n1. pereps\n2. batch? \n1/2: ")
+        resdulu = resdul[int(pil)-1]
         if pilb == "1":
             pereps(reslink[int(pil)-1])
             print(reslink[int(pil)-1])
         elif pilb == "2":
+            print(reslink[int(pil)-1])
             execute(reslink[int(pil)-1])
     except Exception as e:
         print(e)
+        print(traceback.format_exc())
         
 if __name__ == "__main__":
         os.system("clear")
         print(blue+"   ____  __        __             __               \n  / __ \/ /_____ _/ /____  ______/ /__  _______  __\n / / / / __/ __ `/ //_/ / / / __  / _ \/ ___/ / / /\n/ /_/ / /_/ /_/ / ,< / /_/ / /_/ /  __(__  ) /_/ / \n\____/\__/\__,_/_/|_|\__,_/\__,_/\___/____/\__,_/  ")
         print(green+"   ____\n  / ___/______________ _____  ____  ___  _____\n  \__ \/ ___/ ___/ __ `/ __ \/ __ \/ _ \/ ___/\n ___/ / /__/ /  / /_/ / /_/ / /_/ /  __/ /    \n/____/\___/_/   \__,_/ .___/ .___/\___/_/     \n                    /_/   /_/                 ")
         stme = time.time()
-        pil = input("\n\t1. Anime terkini OnGoing\n\t2. Cari anime\n\t3. Anime Batch selesai\n\t Pilih: ")
+        pil = input("CTRL+C for exit\n\t1. Anime terkini OnGoing\n\t2. Cari anime\n\t3. Anime Batch selesai\n\t Pilih: ")
         #pil = "2"
         if pil == "1":
             ongoing()
@@ -254,5 +267,6 @@ if __name__ == "__main__":
             batcher()
         else:
             print("Your input not in average")
+            os.system("python main.py")
         sce = time.time()-stme
         print("time taken", time.strftime("%H:%M:%S",time.gmtime(sce)))
