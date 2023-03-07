@@ -3,7 +3,7 @@ import traceback
 import requests, time
 from bs4 import BeautifulSoup as bs
 import csv, os, time, re
-#from download import download
+from zippydl import downloader
 
 header = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36',
@@ -112,7 +112,11 @@ def pereps(url):
             lin = requests.get(res[0]["href"], headers=header)
             print(res[0]["href"])
             bes = bs(lin.text, "html.parser")
-            origin = re.search('(.*?)/',bes.find("meta",attrs={"property":"og:url"})["content"].strip("/")).group(1)
+            judul = bes.find("font",{"style":"line-height:22px; font-size: 14px;"}).string
+            print("Judul Anime:",judul)
+            print(lin.url)
+            downloader(lin.url,judul,"/sdcard/Download/video")
+            """origin = re.search('(.*?)/',bes.find("meta",attrs={"property":"og:url"})["content"].strip("/")).group(1)
             elemen = re.search('document.getElementById\(\'dlbutton\'\).href = \"(.*?)\" \+ \((.*?)\) \+ \"(.*?)\";',lin.text)
             print(bes.find("meta",attrs={"property":"og:url"})["content"].strip("/"))
             print("Please wait file downloading...\nFile size",bes.findAll("font",attrs={"style":"line-height:18px; font-size: 13px;"})[0].string)
@@ -126,8 +130,7 @@ def pereps(url):
                         fd.write(chunk)
                 fd.close()
                 print("file",name[-1],"downloaded")
-            
-            """except Exception as ex:
+            except Exception as ex:
             print(ex,ex.__traceback__.tb_lineno)
             print("owkw")"""
         
@@ -135,6 +138,7 @@ def execute(url):
     #link = milih()
     resl = []
     global resdulu
+    global judulanim
     resdulu = bs(requests.get(url).text,"html.parser").find("span", "monktit").text
     try:
         #pilih = int(input("Pilih Nomooor brp: "))-1
@@ -143,6 +147,7 @@ def execute(url):
         print("\n\t\t     ________________ \n\t\t    | Dipilih ya ajg |\n\t\t     ````````````````")
         rek = requests.get(url, headers=header)
         soup = bs(rek.text, "html.parser")
+        judulanim = soup.find("div","jdlrx").find("h1").text.replace(" ","")
         for i in  soup.find_all("a",attrs={"target":"_blank"}):
             lin = i["href"]
             if "-episode-" in lin or "-sp" in lin or "-spesial-" in lin:
@@ -169,32 +174,25 @@ def main():
         #pi = int(input("Piiilih Nomor brp: "))-1
         os.system("clear")
         print("="*50)
-        """if "batch" in eps[pi] or "-batch-" in eps[pi]:
-                rek = requests.get(eps[pi], headers=header)
-                soup = bs(rek.text, "html.parser").find("div","batchlink")
-                lili = soup.find_all("li")
-                for n,i in enumerate(lili,1):
-                    rr[n]=i
-                    print(n,i.find("strong").string)"""
         #eps[pi] sama request.get(eps[pi]) diganti eps[i]
         if "-episode-" in eps[i] or "special" in eps[i] or "-sp-" in eps[i] or "ova" in eps[i]:
             rek = bs(requests.get(eps[i], headers=header).text, "html.parser")
-            names = rek.find("h1","posttl").text[:10]
+            names = rek.find("h1","posttl").text.replace(" ","")+".mp4"
             dlp = rek.find("div","download")
             lili = dlp.find_all("li")
-            #print("\n\tPilih resolusinya: ")
             for n,d in enumerate(lili,1):
                 rr[n]=d
-        #pil = int(input("\tpil: "))
         #disini ganti resolusinya print aja rr
         #rr[1:3] == 360p-480p.mp4
         #rr[4:6] == 480p.mkv
         res = [i for i in rr[2].find_all("a", attrs={"data-wpel-link":"external"})]
-        lin = requests.get(res[0]["href"])
-        bes = bs(lin.text,"html.parser")
         print(res[0]["href"])
         print(res[0].string)
-        #.find("meta",attrs={"property":"og:url"})["content"].strip("/")
+        print(names)
+        #judul = bes.find("font",{"style":"line-height:22px; font-size: 14px;"}).string
+        #lin = requests.get(res[0]["href"])
+        #bes = bs(lin.text,"html.parser")
+        """#.find("meta",attrs={"property":"og:url"})["content"].strip("/")
         origin = re.search('(.*?)/',bes.find("meta",attrs={"property":"og:url"})["content"].strip("/")).group(1)
         #print(bes.find("meta",attrs={"property":"og:url"})["content"].strip("/"))
         #origin = bs(lin.text,"html.parser").findAll("div","video-share")[0].find("input",attrs={"readonly":"readonly"})["value"]
@@ -204,26 +202,40 @@ def main():
         urldl = f"https://{origin}{elemen.group(1)}{eval(elemen.group(2))}{elemen.group(3)}"
         print(urldl,"\nKecepatan download tergantung jaringanmu")
         name = urldl.split("/")
-        r = requests.get(urldl,stream=True)
-        print(name[1])
-        folder = os.path.join("/sdcard/Download/video",resdulu)
-        file = os.path.join(folder,name[-1])
+        r = requests.get(urldl,stream=True)"""
+        folder = os.path.join("/sdcard/Download/video",resdulu.replace(" ",""))
+        file = os.path.join(folder,names)
+        lin = requests.get(res[0]["href"])
         if not os.path.exists(folder):
             os.makedirs(folder)
-            fd = open(file,"wb")
-            [fd.write(chunk) for chunk in tqdm(r.iter_content(chunk_size=1024*1024)) if chunk]
-            fd.close()
+            downloader(lin.url,names,folder)
+        else:
+            if os.path.exists(file):
+                print("file exist\n\t CONTINUEING DOWNLOAD BATCH")
+                time.sleep(3)
+            else:
+                downloader(lin.url,names,folder)
+        """file = os.path.join(folder,name[-1])
+        if not os.path.exists(folder):
+            with open(file, "wb") as fd:
+                for chunk in tqdm(r.iter_content(chunk_size=1024*1024)):
+                    if chunk:
+                        fd.write(chunk)
+                fd.close()
         else:
             if not os.path.exists(file):
-                #if os.path.getsize(file) == int(sizes):
-                    fd = open(file,"wb")
-                    [fd.write(chunk) for chunk in r.iter_content(chunk_size=1024*1024) if chunk]
+                with open(file, "wb") as fd:
+                    for chunk in tqdm(r.iter_content(chunk_size=1024*1024)):
+                        if chunk:
+                            fd.write(chunk)
                     fd.close()
+                    #fd = open(file,"wb")
+                    #[fd.write(chunk) for chunk in r.iter_content(chunk_size=1024*1024) if chunk]
             else:
                 print("file is exists ",file,"\ncontinueing download")
                 time.sleep(2)
         print("file",name[len(name)-1],"downloaded")
-    """except ValueError:
+    except ValueError:
         print("Pilihanya sampe 6 ya ajg")
         os.system("clear")
         os.system("exit")"""
