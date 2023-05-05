@@ -4,6 +4,7 @@ import requests, time
 from bs4 import BeautifulSoup as bs
 import csv, os, time, re
 from zippydl import downloader
+from drop import dlpers
 
 header = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36',
@@ -16,7 +17,7 @@ red= "\033[31;1m"
 def pencarian():
     cari = input("\n\tMau cari anime apa: ")
     try: 
-        url = "https://otakudesu.ltd/?s={}&post_type=anime".format(cari)
+        url = "https://otakudesu.lol/?s={}&post_type=anime".format(cari)
         req = requests.get(url, headers=header)
         bes = bs(req.text, "html.parser")
     except IndexError:
@@ -26,7 +27,7 @@ def pencarian():
     return bes
 
 def ongoing():
-        url = ["https://otakudesu.ltd/ongoing-anime","https://otakudesu.ltd/ongoing-anime/page/2","https://otakudesu.ltd/ongoing-anime/page/3"]
+        url = ["https://otakudesu.lol/ongoing-anime","https://otakudesu.lol/ongoing-anime/page/2","https://otakudesu.lol/ongoing-anime/page/3"]
         res = [bs(requests.get(i,headers=header).text,'html.parser') for i in url]
         reslin = {}
         resld=[]
@@ -39,11 +40,14 @@ def ongoing():
         		resljdl.append(x["alt"])
         [print(n,i) for n,i in enumerate(resljdl,1)]
         pil = input("\n\tpilihh: ")
+        print(resld[int(pil)-1])
         pier = input("\n1.pereps\n2.batch\n1/2: ")
         if pier == "1":
-            pereps(resld[int(pil)-1])
+            #pereps(resld[int(pil)-1])
+            dlpers(resld[int(pil)-1])
         elif pier == "2":
-            execute(resld[int(pil)-1])
+            #execute(resld[int(pil)-1])
+            dlpers(resld[int(pil)-1])
         else:
             ongoing()
         
@@ -72,9 +76,11 @@ def milih():
     pilb = input("\n1. pereps\n2. batch? \n1/2: ")
     #pilb = "1"
     if pilb == "1":
-        pereps(resultpil)
+        #pereps(resultpil)
+        dlpers(resultpil)
     elif pilb == "2":
-        execute(resultpil)
+        #execute(resultpil)
+        dlpers(resultpil)
     else:
         print("your input out of average")
         pencarian()
@@ -104,38 +110,23 @@ def pereps(url):
         if "-episode-" in eps[pi] or "special" in eps[pi] or "-sp-" in eps[pi] or "ova" in eps[pi]:
             rek = bs(requests.get(eps[pi], headers=header).text, "html.parser").find("div","download")
             lili = rek.findAll("li")
+            print(eps[pi])
             for n,i in enumerate(lili,1):
                 rr[n]=i
-                print(n)
+                print(i.find("strong").text,i.find("a").text)
             #mendownload resolusi default 480p.mkv
-            res = [i for i in rr[2].find_all("a", attrs={"data-wpel-link":"external"})]
+            res = [i for i in rr[4].find_all("a", attrs={"data-wpel-link":"external"})]
             lin = requests.get(res[0]["href"], headers=header)
-            print(res[0]["href"])
+            print(res[4]["href"])
             bes = bs(lin.text, "html.parser")
             judul = bes.find("font",{"style":"line-height:22px; font-size: 14px;"}).string
             print("Judul Anime:",judul)
             print(lin.url)
             downloader(lin.url,judul,"/sdcard/Download/video")
-            """origin = re.search('(.*?)/',bes.find("meta",attrs={"property":"og:url"})["content"].strip("/")).group(1)
-            elemen = re.search('document.getElementById\(\'dlbutton\'\).href = \"(.*?)\" \+ \((.*?)\) \+ \"(.*?)\";',lin.text)
-            print(bes.find("meta",attrs={"property":"og:url"})["content"].strip("/"))
-            print("Please wait file downloading...\nFile size",bes.findAll("font",attrs={"style":"line-height:18px; font-size: 13px;"})[0].string)
-            urldl = f"https://{origin}{elemen.group(1)}{eval(elemen.group(2))}{elemen.group(3)}"
-            print(urldl)
-            name = urldl.split("/")
-            reks = requests.get(urldl,stream=True)
-            with open(f"/sdcard/Download/video/{name[len(name)-1]}","wb") as fd:
-                for chunk in reks.iter_content(chunk_size=1024*1024):
-                    if chunk:
-                        fd.write(chunk)
-                fd.close()
-                print("file",name[-1],"downloaded")
-            except Exception as ex:
-            print(ex,ex.__traceback__.tb_lineno)
-            print("owkw")"""
         
 def execute(url):
     #link = milih()
+    print(url)
     resl = []
     global resdulu
     global judulanim
@@ -185,7 +176,7 @@ def main():
         #disini ganti resolusinya print aja rr
         #rr[1:3] == 360p-480p.mp4
         #rr[4:6] == 480p.mkv
-        res = [i for i in rr[2].find_all("a", attrs={"data-wpel-link":"external"})]
+        res = [i for i in rr[3].find_all("a", attrs={"data-wpel-link":"external"})]
         print(res[0]["href"])
         print(res[0].string)
         print(names)
@@ -243,7 +234,7 @@ def main():
 
 def batcher():
     try:
-        url = [bs(requests.get(f"https://otakudesu.ltd/complete-anime/page/{i}/").text,"html.parser") for i in range(1,6)]
+        url = [bs(requests.get(f"https://otakudesu.lol/complete-anime/page/{i}/").text,"html.parser") for i in range(1,6)]
         n=1; reslink = []; resdul = []
         global resdulu
         for i in url:
@@ -255,11 +246,14 @@ def batcher():
         pilb = input("\n1. pereps\n2. batch? \n1/2: ")
         resdulu = resdul[int(pil)-1]
         if pilb == "1":
-            pereps(reslink[int(pil)-1])
-            print(reslink[int(pil)-1])
+            #pereps(
+            dlpers(reslink[int(pil)-1])
+            #print(reslink[int(pil)-1])
         elif pilb == "2":
             print(reslink[int(pil)-1])
-            execute(reslink[int(pil)-1])
+            #execute(reslink[int(pil)-1])
+            dlpers(reslink[int(pil)-1])
+
     except Exception as e:
         print(e)
         print(traceback.format_exc())
